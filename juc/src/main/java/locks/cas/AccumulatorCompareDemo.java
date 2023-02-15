@@ -40,7 +40,7 @@ public class AccumulatorCompareDemo {
     public final static int _1W = 10000;
     public final static int THREAD_NUM = 50;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         ClickNumber clickNumber = new ClickNumber();
         long startTime;
         long endTime;
@@ -48,6 +48,68 @@ public class AccumulatorCompareDemo {
         CountDownLatch countDownLatch2 = new CountDownLatch(THREAD_NUM);
         CountDownLatch countDownLatch3 = new CountDownLatch(THREAD_NUM);
         CountDownLatch countDownLatch4 = new CountDownLatch(THREAD_NUM);
+        startTime = System.currentTimeMillis();
+        for (int i = 0; i < THREAD_NUM;i++){
+            new Thread(() -> {
+                try {
+                    for (int j = 0; j < 100 * _1W; j++){
+                        clickNumber.add();
+                    }
+                }finally {
+                    countDownLatch1.countDown();
+                }
+            },String.valueOf(i)).start();
+        }
+        endTime = System.currentTimeMillis();
+        countDownLatch1.await();
+        System.out.println(Thread.currentThread().getName() +clickNumber.number+ "\tsynchronize时间消耗："+(endTime-startTime));
 
+        startTime = System.currentTimeMillis();
+        for (int i = 0; i < THREAD_NUM;i++){
+            new Thread(() -> {
+                try {
+                    for (int j = 0; j < 100 * _1W; j++){
+                        clickNumber.clickByAtomicLong();
+                    }
+                }finally {
+                    countDownLatch2.countDown();
+                }
+            },String.valueOf(i)).start();
+        }
+        endTime = System.currentTimeMillis();
+        countDownLatch2.await();
+        System.out.println(Thread.currentThread().getName() +clickNumber.atomicLong.get()+ "\tclickByLongAdder时间消耗："+(endTime-startTime));
+
+        startTime = System.currentTimeMillis();
+        for (int i = 0; i < THREAD_NUM;i++){
+            new Thread(() -> {
+                try {
+                    for (int j = 0; j < 100 * _1W; j++){
+                        clickNumber.clickByLongAdder();
+                    }
+                }finally {
+                    countDownLatch3.countDown();
+                }
+            },String.valueOf(i)).start();
+        }
+        endTime = System.currentTimeMillis();
+        countDownLatch3.await();
+        System.out.println(Thread.currentThread().getName() +clickNumber.longAdder.sum()+ "\tclickByLongAdder时间消耗："+(endTime-startTime));
+
+        startTime = System.currentTimeMillis();
+        for (int i = 0; i < THREAD_NUM;i++){
+            new Thread(() -> {
+                try {
+                    for (int j = 0; j < 100 * _1W; j++){
+                        clickNumber.clickByLongAccumulator();
+                    }
+                }finally {
+                    countDownLatch4.countDown();
+                }
+            },String.valueOf(i)).start();
+        }
+        endTime = System.currentTimeMillis();
+        countDownLatch4.await();
+        System.out.println(Thread.currentThread().getName() +clickNumber.accumulator.get()+ "\tclickByLongAccumulator时间消耗："+(endTime-startTime));
     }
 }
