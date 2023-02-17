@@ -2,13 +2,26 @@ package sycnhronizesup;
 
 import org.openjdk.jol.info.ClassLayout;
 
+import java.util.concurrent.TimeUnit;
+
 public class SynchronizedUpDemo {
     public static void main(String[] args) {
+
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
         //biased
         Object o = new Object();
-        synchronized (o){
-            System.out.println(ClassLayout.parseInstance(o).toPrintable());
-        }
+        System.out.println(ClassLayout.parseInstance(o).toPrintable());
+        System.out.println("==============================");
+        new Thread(() -> {
+            synchronized (o){
+                System.out.println(ClassLayout.parseInstance(o).toPrintable());
+            }
+        },"t1").start();
+
     }
 
     private static void nolock() {
